@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onReportTap;
+
+  const DashboardScreen({super.key, this.onReportTap});
 
   static const Color primaryColor = Color(0xFF2457C5);
   static const Color darkColor = Color(0xFF17243A);
@@ -17,10 +18,7 @@ class DashboardScreen extends StatelessWidget {
             SizedBox(width: 9),
             Text(
               'Campus Report',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: darkColor,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, color: darkColor),
             ),
           ],
         ),
@@ -49,10 +47,7 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 6),
             const Text(
               'Help make your campus a better place.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.blueGrey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.blueGrey),
             ),
             const SizedBox(height: 24),
 
@@ -84,23 +79,11 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   const Text(
                     'Report campus problems so the right team can take action.',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      height: 1.4,
-                    ),
+                    style: TextStyle(color: Colors.white70, height: 1.4),
                   ),
                   const SizedBox(height: 16),
                   FilledButton.icon(
-                    onPressed: () {
-                      // The report form will be connected here.
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'The incident reporting form is coming next!',
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: onReportTap,
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: primaryColor,
@@ -194,10 +177,7 @@ class DashboardScreen extends StatelessWidget {
 
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 28,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
@@ -205,27 +185,17 @@ class DashboardScreen extends StatelessWidget {
               ),
               child: const Column(
                 children: [
-                  Icon(
-                    Icons.inbox_outlined,
-                    size: 42,
-                    color: Colors.blueGrey,
-                  ),
+                  Icon(Icons.inbox_outlined, size: 42, color: Colors.blueGrey),
                   SizedBox(height: 12),
                   Text(
                     'No reports yet',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                   SizedBox(height: 5),
                   Text(
                     'Your submitted incidents will appear here.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.blueGrey,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Colors.blueGrey, fontSize: 13),
                   ),
                 ],
               ),
@@ -275,10 +245,7 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.blueGrey,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
           ),
         ],
       ),

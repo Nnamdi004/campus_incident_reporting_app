@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'screens/student/dashboard_screen.dart';
+import 'screens/student/report_form_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,10 +44,7 @@ class CampusIncidentApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: primaryColor,
-              width: 1.5,
-            ),
+            borderSide: const BorderSide(color: primaryColor, width: 1.5),
           ),
         ),
       ),
@@ -64,19 +63,21 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int selectedIndex = 0;
 
-  final List<Widget> pages = const [
-    DashboardScreen(),
-    PlaceholderPage(
+  List<Widget> get pages => [
+    DashboardScreen(
+      onReportTap: () {
+        setState(() {
+          selectedIndex = 2;
+        });
+      },
+    ),
+    const PlaceholderPage(
       title: 'My Reports',
       subtitle: 'View and track the incidents you have submitted.',
       icon: Icons.assignment_outlined,
     ),
-    PlaceholderPage(
-      title: 'New Report',
-      subtitle: 'Report a problem on your campus.',
-      icon: Icons.add_circle_outline,
-    ),
-    PlaceholderPage(
+    const ReportFormScreen(),
+    const PlaceholderPage(
       title: 'My Profile',
       subtitle: 'Manage your account and personal information.',
       icon: Icons.person_outline,
@@ -86,10 +87,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: selectedIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: selectedIndex, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
@@ -159,10 +157,7 @@ class PlaceholderPage extends StatelessWidget {
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.blueGrey,
-                  fontSize: 15,
-                ),
+                style: const TextStyle(color: Colors.blueGrey, fontSize: 15),
               ),
             ],
           ),
