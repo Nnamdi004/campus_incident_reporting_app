@@ -9,6 +9,7 @@ import 'screens/student/dashboard_screen.dart';
 import 'screens/student/reports_screen.dart';
 import 'screens/student/report_form_screen.dart';
 import 'screens/student/profile_screen.dart';
+import 'providers/report_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,12 +19,20 @@ Future<void> main() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ReportProvider(),
+        ),
+      ],
       child: const CampusReportApp(),
     ),
   );
 }
+
 
 class CampusReportApp extends StatelessWidget {
   const CampusReportApp({super.key});

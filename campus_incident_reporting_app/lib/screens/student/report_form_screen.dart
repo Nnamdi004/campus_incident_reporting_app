@@ -1,7 +1,10 @@
-import 'dart:io';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/report_provider.dart';
 
 class ReportFormScreen extends StatefulWidget {
   const ReportFormScreen({super.key});
@@ -17,10 +20,10 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  final ImagePicker _imagePicker = ImagePicker();
+  final ImagePicker _picker = ImagePicker();
 
-  String? _selectedCategory;
-  File? _selectedImage;
+  String _selectedCategory = 'Electricity';
+  XFile? _selectedImage;
   bool _isSubmitting = false;
 
   final List<String> _categories = [
@@ -35,7 +38,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
   Future<void> _pickImage() async {
     try {
-      final XFile? image = await _imagePicker.pickImage(
+      final image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 75,
         maxWidth: 1200,
@@ -43,28 +46,46 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
       if (image != null && mounted) {
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = image;
         });
       }
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to select image. Please try again.'),
-        ),
+        const SnackBar(content: Text('Unable to select image.')),
       );
     }
   }
 
-  Future<void> _submitReport() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  Future<String?> _uploadImage(String studentId) async {
+    if (_selectedImage == null) return null;
 
-    if (_selectedCategory == null) {
+    final bytes = await _selectedImage!.readAsBytes();
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('reports')
+        .child(studentId)
+        .child('report_$timestamp.jpg');
+
+    final uploadTask = await storageRef.putData(
+      bytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+
+    return await uploadTask.ref.getDownloadURL();
+  }
+
+  Future<void> _submitReport() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an incident category.')),
+        const SnackBar(content: Text('Please sign in before submitting.')),
       );
       return;
     }
@@ -73,24 +94,68 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       _isSubmitting = true;
     });
 
-    // Firebase submission will be implemented in the backend stage.
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      // Upload the optional photo first.
+      final imageUrl = await _uploadImage(user.uid);
 
-    if (!mounted) return;
+      // Save the report details in Firestore.
+      final success = await context.read<ReportProvider>().submitReport(
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim(),
+            category: _selectedCategory,
+            location: _locationController.text.trim(),
+            studentId: user.uid,
+            studentEmail: user.email ?? '',
+            imageUrl: imageUrl,
+          );
 
-    setState(() {
-      _isSubmitting = false;
-    });
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Form validated! Firebase submission will be connected next.',
+      if (success) {
+        _titleController.clear();
+        _locationController.clear();
+        _descriptionController.clear();
+
+        setState(() {
+          _selectedCategory = 'Electricity';
+          _selectedImage = null;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Your incident report was submitted successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Report submission failed. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Firebase error: ${e.message ?? e.code}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Something went wrong while submitting your report.'),
         ),
-        backgroundColor: Color(0xFF239B69),
-        duration: Duration(seconds: 3),
-      ),
-    );
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -103,73 +168,65 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF2457C5);
-    const darkColor = Color(0xFF17243A);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Report an Incident',
+          'Report an Issue',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Help improve your campus',
                 style: TextStyle(
-                  fontSize: 23,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: darkColor,
                 ),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 8),
               const Text(
-                'Provide accurate information about the problem so the appropriate team can address it.',
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: Colors.blueGrey,
-                ),
+                'Tell us about an issue that needs attention.',
+                style: TextStyle(color: Colors.grey),
               ),
+              const SizedBox(height: 24),
 
-              const SizedBox(height: 25),
-
-              _buildLabel('Incident Title'),
+              // Report title
+              const Text(
+                'Issue Title',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
-                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  hintText: 'e.g. Broken water pipe near the library',
-                  prefixIcon: Icon(Icons.title),
+                  hintText: 'e.g. Broken lights in the library',
+                  border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter an incident title.';
-                  }
-                  if (value.trim().length < 5) {
-                    return 'Title must contain at least 5 characters.';
+                  if (value == null || value.trim().length < 5) {
+                    return 'Enter a title with at least 5 characters.';
                   }
                   return null;
                 },
               ),
-
               const SizedBox(height: 20),
 
-              _buildLabel('Incident Category'),
+              // Category
+              const Text(
+                'Category',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
-                isExpanded: true,
                 decoration: const InputDecoration(
-                  hintText: 'Select a category',
-                  prefixIcon: Icon(Icons.category_outlined),
+                  border: OutlineInputBorder(),
                 ),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
@@ -178,192 +235,140 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a category.';
+                  if (value != null) {
+                    setState(() {
+                      _selectedCategory = value;
+                    });
                   }
-                  return null;
                 },
               ),
-
               const SizedBox(height: 20),
 
-              _buildLabel('Campus Location'),
+              // Location
+              const Text(
+                'Location',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _locationController,
-                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  hintText: 'e.g. Block A, Second Floor',
+                  hintText: 'e.g. Block A, Room 204',
+                  border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.location_on_outlined),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter the incident location.';
+                    return 'Please enter the location.';
                   }
                   return null;
                 },
               ),
-
               const SizedBox(height: 20),
 
-              _buildLabel('Incident Description'),
+              // Description
+              const Text(
+                'Description',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
-                textCapitalization: TextCapitalization.sentences,
                 maxLines: 5,
-                maxLength: 500,
                 decoration: const InputDecoration(
-                  hintText: 'Describe what happened and provide any useful details...',
+                  hintText: 'Describe the issue in detail...',
+                  border: OutlineInputBorder(),
                   alignLabelWithHint: true,
                 ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please describe the incident.';
-                  }
-                  if (value.trim().length < 15) {
-                    return 'Please provide at least 15 characters.';
+                  if (value == null || value.trim().length < 15) {
+                    return 'Description must contain at least 15 characters.';
                   }
                   return null;
                 },
               ),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 15),
-
-              _buildLabel('Attach a Photo'),
-              const SizedBox(height: 5),
+              // Optional photo
               const Text(
-                'Add a photo to help staff understand the problem. This is optional.',
-                style: TextStyle(fontSize: 13, color: Colors.blueGrey),
+                'Attach a Photo (Optional)',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-
-              const SizedBox(height: 12),
-
+              const SizedBox(height: 10),
               if (_selectedImage != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Image.file(
-                    _selectedImage!,
-                    height: 190,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+                FutureBuilder(
+                  future: _selectedImage!.readAsBytes(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          snapshot.data!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      );
+                    }
+
+                    return const SizedBox(
+                      height: 100,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
                 ),
-                const SizedBox(height: 10),
                 TextButton.icon(
                   onPressed: () {
                     setState(() {
                       _selectedImage = null;
                     });
                   },
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text('Remove photo'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  label: const Text(
+                    'Remove Photo',
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
               ] else
-                InkWell(
-                  onTap: _pickImage,
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 25),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: const Color(0xFFD5DEEC),
-                        style: BorderStyle.solid,
-                      ),
-                    ),
-                    child: const Column(
-                      children: [
-                        Icon(
-                          Icons.cloud_upload_outlined,
-                          size: 38,
-                          color: primaryColor,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Tap to upload a photo',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: darkColor,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Select an image from your gallery',
-                          style: TextStyle(
-                            color: Colors.blueGrey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                OutlinedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: const Text('Choose Photo'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
                   ),
                 ),
 
               const SizedBox(height: 30),
 
+              // Submit
               SizedBox(
                 width: double.infinity,
-                height: 54,
-                child: FilledButton.icon(
+                height: 52,
+                child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitReport,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                  ),
-                  icon: _isSubmitting
+                  child: _isSubmitting
                       ? const SizedBox(
-                          width: 19,
-                          height: 19,
+                          height: 22,
+                          width: 22,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.send),
-                  label: Text(
-                    _isSubmitting ? 'Submitting...' : 'Submit Report',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                      : const Text(
+                          'Submit Report',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
-
-              const SizedBox(height: 12),
-
-              const Center(
-                child: Text(
-                  'Your report will be reviewed by campus staff.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Colors.blueGrey),
-                ),
-              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF17243A),
       ),
     );
   }
