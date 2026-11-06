@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
@@ -16,6 +18,14 @@ Future<void> main() async {
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  await Supabase.initialize(
+    url: 'https://iinyrxsvbmehqmqwgpst.supabase.co',
+    publishableKey: 'sb_publishable_fWWfKMg8MlpObIn8uKShpQ_3DyEkVuo',
+    accessToken: () async {
+      return await FirebaseAuth.instance.currentUser?.getIdToken();
+    },
   );
 
   runApp(
@@ -93,18 +103,23 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int selectedIndex = 0;
 
-  List<Widget> get pages => [
-        DashboardScreen(
-          onReportTap: () {
-            setState(() {
-              selectedIndex = 2;
-            });
-          },
-        ),
-        const ReportsScreen(),
-        const ReportFormScreen(),
-        const ProfileScreen(),
-      ];
+  void openReports() {
+    setState(() => selectedIndex = 1);
+  }
+
+  void openReportForm() {
+    setState(() => selectedIndex = 2);
+  }
+
+  late final List<Widget> pages = [
+    DashboardScreen(
+      onReportTap: openReportForm,
+      onViewAllTap: openReports,
+    ),
+    const ReportsScreen(),
+    const ReportFormScreen(),
+    const ProfileScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -116,9 +131,7 @@ class _MainNavigationState extends State<MainNavigation> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
+          setState(() => selectedIndex = index);
         },
         destinations: const [
           NavigationDestination(

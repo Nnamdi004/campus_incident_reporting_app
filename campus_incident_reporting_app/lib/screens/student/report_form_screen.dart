@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../providers/report_provider.dart';
 
@@ -36,6 +36,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
     'Other',
   ];
 
+  // Select an optional photo.
   Future<void> _pickImage() async {
     try {
       final image = await _picker.pickImage(
@@ -44,40 +45,74 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
         maxWidth: 1200,
       );
 
-      if (image != null && mounted) {
-        setState(() {
-          _selectedImage = image;
-        });
+      if (image == null || !mounted) return;
+
+      // Keep uploaded images below 5 MB.
+      final bytes = await image.readAsBytes();
+
+      if (bytes.length > 5 * 1024 * 1024) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please choose an image smaller than 5 MB.'),
+          ),
+        );
+        return;
       }
+
+      if (!mounted) return;
+
+      setState(() {
+        _selectedImage = image;
+      });
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to select image.')),
+        const SnackBar(
+          content: Text('Unable to select image.'),
+        ),
       );
     }
   }
 
+  // Upload the selected photo to Supabase Storage.
   Future<String?> _uploadImage(String studentId) async {
     if (_selectedImage == null) return null;
 
     final bytes = await _selectedImage!.readAsBytes();
+
+    final extension = _selectedImage!.name.contains('.')
+        ? _selectedImage!.name.split('.').last.toLowerCase()
+        : 'jpg';
+
     final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('reports')
-        .child(studentId)
-        .child('report_$timestamp.jpg');
+    // Each student's photos are stored in their own folder.
+    final photoPath = '$studentId/report_$timestamp.$extension';
 
-    final uploadTask = await storageRef.putData(
-      bytes,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
+    final contentType = _selectedImage!.mimeType ??
+        (extension == 'png'
+            ? 'image/png'
+            : extension == 'webp'
+                ? 'image/webp'
+                : 'image/jpeg');
 
-    return await uploadTask.ref.getDownloadURL();
+    await Supabase.instance.client.storage
+        .from('incident-photos')
+        .uploadBinary(
+          photoPath,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: contentType,
+            upsert: false,
+          ),
+        );
+
+    return photoPath;
   }
 
+  // Submit the report to Firestore.
   Future<void> _submitReport() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -85,7 +120,9 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign in before submitting.')),
+        const SnackBar(
+          content: Text('Please sign in before submitting.'),
+        ),
       );
       return;
     }
@@ -94,11 +131,15 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       _isSubmitting = true;
     });
 
+    String? uploadedPhotoPath;
+
     try {
       // Upload the optional photo first.
-      final imageUrl = await _uploadImage(user.uid);
+      uploadedPhotoPath = await _uploadImage(user.uid);
 
-      // Save the report details in Firestore.
+      if (!mounted) return;
+
+      // Save the report details and photo path in Firestore.
       final success = await context.read<ReportProvider>().submitReport(
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
@@ -106,7 +147,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
             location: _locationController.text.trim(),
             studentId: user.uid,
             studentEmail: user.email ?? '',
-            imageUrl: imageUrl,
+            photoPath: uploadedPhotoPath,
           );
 
       if (!mounted) return;
@@ -123,14 +164,30 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Your incident report was submitted successfully!'),
+            content: Text(
+              'Your incident report was submitted successfully!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
       } else {
+        // Remove the uploaded photo if saving the report failed.
+        if (uploadedPhotoPath != null) {
+          try {
+            await Supabase.instance.client.storage
+                .from('incident-photos')
+                .remove([uploadedPhotoPath]);
+          } catch (_) {
+            // The report failed even if cleanup also fails.
+          }
+        }
+
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Report submission failed. Please try again.'),
+            content: Text(
+              'Report submission failed. Please try again.',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -139,14 +196,24 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Firebase error: ${e.message ?? e.code}')),
+        SnackBar(
+          content: Text('Firebase error: ${e.message ?? e.code}'),
+        ),
+      );
+    } on StorageException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Photo upload failed: ${e.message}'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Something went wrong while submitting your report.'),
+        SnackBar(
+          content: Text('Something went wrong: $e'),
         ),
       );
     } finally {
@@ -196,7 +263,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Report title
+              // Report title.
               const Text(
                 'Issue Title',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -217,7 +284,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Category
+              // Category.
               const Text(
                 'Category',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -244,7 +311,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Location
+              // Location.
               const Text(
                 'Location',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -266,7 +333,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Description
+              // Description.
               const Text(
                 'Description',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -289,12 +356,13 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Optional photo
+              // Optional photo.
               const Text(
                 'Attach a Photo (Optional)',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 10),
+
               if (_selectedImage != null) ...[
                 FutureBuilder(
                   future: _selectedImage!.readAsBytes(),
@@ -313,7 +381,9 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
                     return const SizedBox(
                       height: 100,
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
                     );
                   },
                 ),
@@ -323,7 +393,10 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
                       _selectedImage = null;
                     });
                   },
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                  ),
                   label: const Text(
                     'Remove Photo',
                     style: TextStyle(color: Colors.red),
@@ -331,7 +404,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
                 ),
               ] else
                 OutlinedButton.icon(
-                  onPressed: _pickImage,
+                  onPressed: _isSubmitting ? null : _pickImage,
                   icon: const Icon(Icons.add_a_photo_outlined),
                   label: const Text('Choose Photo'),
                   style: OutlinedButton.styleFrom(
@@ -341,7 +414,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
               const SizedBox(height: 30),
 
-              // Submit
+              // Submit.
               SizedBox(
                 width: double.infinity,
                 height: 52,

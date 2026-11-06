@@ -9,7 +9,7 @@ class CampusReport {
   final String status;
   final String studentId;
   final String studentEmail;
-  final String? imageUrl;
+  final String? photoPath;
   final DateTime createdAt;
 
   CampusReport({
@@ -21,14 +21,14 @@ class CampusReport {
     required this.status,
     required this.studentId,
     required this.studentEmail,
-    this.imageUrl,
+    this.photoPath,
     required this.createdAt,
   });
 
   factory CampusReport.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> document,
   ) {
-    final data = document.data()!;
+    final data = document.data() ?? {};
 
     return CampusReport(
       id: document.id,
@@ -39,7 +39,7 @@ class CampusReport {
       status: data['status'] ?? 'Submitted',
       studentId: data['studentId'] ?? '',
       studentEmail: data['studentEmail'] ?? '',
-      imageUrl: data['imageUrl'],
+      photoPath: data['photoPath'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
           DateTime.now(),
     );
@@ -54,7 +54,7 @@ class CampusReport {
       'status': status,
       'studentId': studentId,
       'studentEmail': studentEmail,
-      'imageUrl': imageUrl,
+      'photoPath': photoPath,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }

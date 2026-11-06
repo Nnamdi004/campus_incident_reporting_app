@@ -45,7 +45,7 @@ class ReportProvider extends ChangeNotifier {
     required String location,
     required String studentId,
     required String studentEmail,
-    String? imageUrl,
+    String? photoPath,
   }) async {
     try {
       await _firestoreService.submitReport(
@@ -55,9 +55,10 @@ class ReportProvider extends ChangeNotifier {
         location: location,
         studentId: studentId,
         studentEmail: studentEmail,
-        imageUrl: imageUrl,
+        photoPath: photoPath,
       );
 
+      _errorMessage = null;
       return true;
     } catch (error) {
       _errorMessage = 'Failed to submit your report. Please try again.';

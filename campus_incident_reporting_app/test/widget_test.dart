@@ -7,24 +7,56 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:provider/provider.dart';
 
 import 'package:campus_incident_reporting_app/main.dart';
+import 'package:campus_incident_reporting_app/providers/auth_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('AuthGate shows a loading indicator during initialization',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(ChangeNotifierProvider<AuthProvider>(
+      create: (_) => _InitializingAuthProvider(),
+      child: const MaterialApp(home: AuthGate()),
+    ));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
+}
+
+class _InitializingAuthProvider extends ChangeNotifier implements AuthProvider {
+  @override
+  String? get errorMessage => null;
+
+  @override
+  bool get isAuthenticated => false;
+
+  @override
+  bool get isInitializing => true;
+
+  @override
+  bool get isLoading => true;
+
+  @override
+  User? get user => null;
+
+  @override
+  Future<bool> login({required String email, required String password}) async =>
+      false;
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  Future<bool> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async =>
+      false;
+}
+
+class MyApp {
+  const MyApp();
 }

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/campus_report.dart';
 
 class FirestoreService {
@@ -15,7 +16,7 @@ class FirestoreService {
     required String location,
     required String studentId,
     required String studentEmail,
-    String? imageUrl,
+    String? photoPath,
   }) async {
     final report = CampusReport(
       id: '',
@@ -26,7 +27,7 @@ class FirestoreService {
       status: 'Submitted',
       studentId: studentId,
       studentEmail: studentEmail,
-      imageUrl: imageUrl,
+      photoPath: photoPath,
       createdAt: DateTime.now(),
     );
 
@@ -45,8 +46,7 @@ class FirestoreService {
         );
   }
 
-  // Update a report's status. Staff authorization will be enforced
-  // through Firestore security rules as well as the app UI.
+  // Update a report's status.
   Future<void> updateReportStatus({
     required String reportId,
     required String newStatus,
