@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'screens/student/dashboard_screen.dart';
 import 'screens/student/report_form_screen.dart';
 import 'screens/student/reports_screen.dart';
+import 'screens/student/profile_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,7 +75,7 @@ List<Widget> get pages => [
   ),
   const ReportsScreen(),
   const ReportFormScreen(),
-  const PlaceholderPage(title: 'Profile', subtitle: '', icon: null,),
+  const ProfileScreen(),
 ];
 
   @override
@@ -118,13 +119,13 @@ List<Widget> get pages => [
 class PlaceholderPage extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData? icon;
+  final IconData icon;
 
   const PlaceholderPage({
     super.key,
     required this.title,
     required this.subtitle,
-    this.icon,
+    required this.icon,
   });
 
   @override
@@ -137,10 +138,8 @@ class PlaceholderPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (icon != null) ...[
-                Icon(icon, size: 64, color: const Color(0xFF2457C5)),
-                const SizedBox(height: 16),
-              ],
+              Icon(icon, size: 64, color: const Color(0xFF2457C5)),
+              const SizedBox(height: 16),
               Text(
                 title,
                 style: const TextStyle(
