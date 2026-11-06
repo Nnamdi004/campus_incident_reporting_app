@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'screens/student/dashboard_screen.dart';
 import 'screens/student/report_form_screen.dart';
+import 'screens/student/reports_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,26 +64,18 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int selectedIndex = 0;
 
-  List<Widget> get pages => [
-    DashboardScreen(
-      onReportTap: () {
-        setState(() {
-          selectedIndex = 2;
-        });
-      },
-    ),
-    const PlaceholderPage(
-      title: 'My Reports',
-      subtitle: 'View and track the incidents you have submitted.',
-      icon: Icons.assignment_outlined,
-    ),
-    const ReportFormScreen(),
-    const PlaceholderPage(
-      title: 'My Profile',
-      subtitle: 'Manage your account and personal information.',
-      icon: Icons.person_outline,
-    ),
-  ];
+List<Widget> get pages => [
+  DashboardScreen(
+    onReportTap: () {
+      setState(() {
+        selectedIndex = 2;
+      });
+    },
+  ),
+  const ReportsScreen(),
+  const ReportFormScreen(),
+  const PlaceholderPage(title: 'Profile', subtitle: '', icon: null,),
+];
 
   @override
   Widget build(BuildContext context) {
@@ -125,13 +118,13 @@ class _MainNavigationState extends State<MainNavigation> {
 class PlaceholderPage extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final IconData? icon;
 
   const PlaceholderPage({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.icon,
+    this.icon,
   });
 
   @override
@@ -144,8 +137,10 @@ class PlaceholderPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 64, color: const Color(0xFF2457C5)),
-              const SizedBox(height: 16),
+              if (icon != null) ...[
+                Icon(icon, size: 64, color: const Color(0xFF2457C5)),
+                const SizedBox(height: 16),
+              ],
               Text(
                 title,
                 style: const TextStyle(
