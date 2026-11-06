@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -11,6 +13,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final studentName = user?.displayName ?? 'Student';
+    final studentEmail = user?.email ?? 'No email available';
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -48,7 +53,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 5),
 
             Text(
-              'student@university.edu',
+              studentEmail,
               style: TextStyle(
                 color: Colors.grey.shade600,
                 fontSize: 14,
@@ -85,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
             _ProfileTile(
               icon: Icons.person_outline,
               title: 'Full Name',
-              subtitle: 'Student Name',
+              subtitle: studentName,
               onTap: () => _showMessage(
                 context,
                 'Profile editing will be available soon.',
@@ -150,10 +155,9 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _showMessage(
-                  context,
-                  'Firebase sign-out will be connected soon.',
-                ),
+                onPressed: () async {
+                  await context.read<AuthProvider>().logout();
+                },
                 icon: const Icon(Icons.logout, color: Colors.red),
                 label: const Text(
                   'Sign Out',

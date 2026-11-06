@@ -1,56 +1,75 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/auth_screen.dart';
 import 'screens/student/dashboard_screen.dart';
-import 'screens/student/report_form_screen.dart';
 import 'screens/student/reports_screen.dart';
+import 'screens/student/report_form_screen.dart';
 import 'screens/student/profile_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const CampusIncidentApp());
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: const CampusReportApp(),
+    ),
+  );
 }
 
-class CampusIncidentApp extends StatelessWidget {
-  const CampusIncidentApp({super.key});
+class CampusReportApp extends StatelessWidget {
+  const CampusReportApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF2457C5);
-
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Campus Report',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryColor,
-          brightness: Brightness.light,
+          seedColor: const Color(0xFF2457C5),
         ),
-        scaffoldBackgroundColor: const Color(0xFFF6F8FC),
+        scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF6F8FC),
-          foregroundColor: Color(0xFF17243A),
+          backgroundColor: Colors.white,
           elevation: 0,
-          centerTitle: false,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE2E7F0)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE2E7F0)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: primaryColor, width: 1.5),
-          ),
         ),
       ),
-      home: const MainNavigation(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, child) {
+        if (auth.isInitializing) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (auth.isAuthenticated) {
+          return const MainNavigation();
+        }
+
+        return const AuthScreen();
+      },
     );
   }
 }
@@ -65,23 +84,26 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int selectedIndex = 0;
 
-List<Widget> get pages => [
-  DashboardScreen(
-    onReportTap: () {
-      setState(() {
-        selectedIndex = 2;
-      });
-    },
-  ),
-  const ReportsScreen(),
-  const ReportFormScreen(),
-  const ProfileScreen(),
-];
+  List<Widget> get pages => [
+        DashboardScreen(
+          onReportTap: () {
+            setState(() {
+              selectedIndex = 2;
+            });
+          },
+        ),
+        const ReportsScreen(),
+        const ReportFormScreen(),
+        const ProfileScreen(),
+      ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: selectedIndex, children: pages),
+      body: IndexedStack(
+        index: selectedIndex,
+        children: pages,
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
@@ -96,8 +118,8 @@ List<Widget> get pages => [
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment),
+            icon: Icon(Icons.list_alt_outlined),
+            selectedIcon: Icon(Icons.list_alt),
             label: 'Reports',
           ),
           NavigationDestination(
@@ -111,51 +133,6 @@ List<Widget> get pages => [
             label: 'Profile',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class PlaceholderPage extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-
-  const PlaceholderPage({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 64, color: const Color(0xFF2457C5)),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.blueGrey, fontSize: 15),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
