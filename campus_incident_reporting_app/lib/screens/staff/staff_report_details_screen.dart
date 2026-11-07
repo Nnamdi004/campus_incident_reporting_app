@@ -18,8 +18,7 @@ class StaffReportDetailsScreen extends StatefulWidget {
       _StaffReportDetailsScreenState();
 }
 
-class _StaffReportDetailsScreenState
-    extends State<StaffReportDetailsScreen> {
+class _StaffReportDetailsScreenState extends State<StaffReportDetailsScreen> {
   String? _photoUrl;
   bool _loadingPhoto = false;
 
@@ -135,18 +134,12 @@ class _StaffReportDetailsScreenState
                   const SizedBox(height: 22),
                   const Text(
                     'Description',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     report.description,
-                    style: const TextStyle(
-                      height: 1.6,
-                      color: Colors.blueGrey,
-                    ),
+                    style: const TextStyle(height: 1.6, color: Colors.blueGrey),
                   ),
                   const SizedBox(height: 22),
                   _detailRow(
@@ -164,8 +157,7 @@ class _StaffReportDetailsScreenState
                   _detailRow(
                     Icons.access_time,
                     'Time reported',
-                    TimeOfDay.fromDateTime(report.createdAt)
-                        .format(context),
+                    TimeOfDay.fromDateTime(report.createdAt).format(context),
                   ),
                 ],
               ),
@@ -176,11 +168,7 @@ class _StaffReportDetailsScreenState
               title: 'Student Information',
               icon: Icons.person_outline,
               children: [
-                _detailRow(
-                  Icons.email_outlined,
-                  'Email',
-                  report.studentEmail,
-                ),
+                _detailRow(Icons.email_outlined, 'Email', report.studentEmail),
                 _detailRow(
                   Icons.badge_outlined,
                   'Student ID',
@@ -195,16 +183,13 @@ class _StaffReportDetailsScreenState
               title: 'Attached Photograph',
               icon: Icons.image_outlined,
               children: [
-                if (report.photoPath == null ||
-                    report.photoPath!.isEmpty)
+                if (report.photoPath == null || report.photoPath!.isEmpty)
                   const Text(
                     'No photograph was attached to this report.',
                     style: TextStyle(color: Colors.blueGrey),
                   )
                 else if (_loadingPhoto)
-                  const Center(
-                    child: CircularProgressIndicator(),
-                  )
+                  const Center(child: CircularProgressIndicator())
                 else if (_photoUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
@@ -212,7 +197,7 @@ class _StaffReportDetailsScreenState
                       _photoUrl!,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
+                      errorBuilder: (_, _, _) =>
                           const Text('Unable to display photograph.'),
                     ),
                   )
@@ -235,8 +220,9 @@ class _StaffReportDetailsScreenState
                   style: TextStyle(color: Colors.blueGrey),
                 ),
                 const SizedBox(height: 14),
-                ...['Submitted', 'In Progress', 'Resolved', 'Rejected']
-                    .map((status) {
+                ...['Submitted', 'In Progress', 'Resolved', 'Rejected'].map((
+                  status,
+                ) {
                   final selected = report.status == status;
 
                   return Padding(
@@ -361,17 +347,12 @@ class _StaffReportDetailsScreenState
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.blueGrey,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.blueGrey, fontSize: 12),
                 ),
                 const SizedBox(height: 3),
                 SelectableText(
                   value.isEmpty ? 'Not provided' : value,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
             ),

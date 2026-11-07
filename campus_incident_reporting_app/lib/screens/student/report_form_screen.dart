@@ -68,11 +68,9 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to select image.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Unable to select image.')));
     }
   }
 
@@ -91,22 +89,20 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
     // Each student's photos are stored in their own folder.
     final photoPath = '$studentId/report_$timestamp.$extension';
 
-    final contentType = _selectedImage!.mimeType ??
+    final contentType =
+        _selectedImage!.mimeType ??
         (extension == 'png'
             ? 'image/png'
             : extension == 'webp'
-                ? 'image/webp'
-                : 'image/jpeg');
+            ? 'image/webp'
+            : 'image/jpeg');
 
     await Supabase.instance.client.storage
         .from('incident-photos')
         .uploadBinary(
           photoPath,
           bytes,
-          fileOptions: FileOptions(
-            contentType: contentType,
-            upsert: false,
-          ),
+          fileOptions: FileOptions(contentType: contentType, upsert: false),
         );
 
     return photoPath;
@@ -120,9 +116,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please sign in before submitting.'),
-        ),
+        const SnackBar(content: Text('Please sign in before submitting.')),
       );
       return;
     }
@@ -141,14 +135,14 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
       // Save the report details and photo path in Firestore.
       final success = await context.read<ReportProvider>().submitReport(
-            title: _titleController.text.trim(),
-            description: _descriptionController.text.trim(),
-            category: _selectedCategory,
-            location: _locationController.text.trim(),
-            studentId: user.uid,
-            studentEmail: user.email ?? '',
-            photoPath: uploadedPhotoPath,
-          );
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _selectedCategory,
+        location: _locationController.text.trim(),
+        studentId: user.uid,
+        studentEmail: user.email ?? '',
+        photoPath: uploadedPhotoPath,
+      );
 
       if (!mounted) return;
 
@@ -164,9 +158,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Your incident report was submitted successfully!',
-            ),
+            content: Text('Your incident report was submitted successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -185,9 +177,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Report submission failed. Please try again.',
-            ),
+            content: Text('Report submission failed. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -196,26 +186,19 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Firebase error: ${e.message ?? e.code}'),
-        ),
+        SnackBar(content: Text('Firebase error: ${e.message ?? e.code}')),
       );
     } on StorageException catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Photo upload failed: ${e.message}'),
-        ),
+        SnackBar(content: Text('Photo upload failed: ${e.message}')),
       );
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Something went wrong: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Something went wrong: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -251,10 +234,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
             children: [
               const Text(
                 'Help improve your campus',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -292,9 +272,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(border: OutlineInputBorder()),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
                     value: category,
@@ -381,9 +359,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
 
                     return const SizedBox(
                       height: 100,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   },
                 ),
@@ -393,10 +369,7 @@ class _ReportFormScreenState extends State<ReportFormScreen> {
                       _selectedImage = null;
                     });
                   },
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.red,
-                  ),
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
                   label: const Text(
                     'Remove Photo',
                     style: TextStyle(color: Colors.red),

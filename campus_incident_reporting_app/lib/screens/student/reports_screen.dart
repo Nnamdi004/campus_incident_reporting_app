@@ -95,8 +95,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   String formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
 
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
@@ -118,9 +128,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -208,14 +216,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             ConnectionState.waiting) {
                           return const SizedBox(
                             height: 180,
-                            child: Center(
-                              child: CircularProgressIndicator(),
-                            ),
+                            child: Center(child: CircularProgressIndicator()),
                           );
                         }
 
-                        if (snapshot.hasError ||
-                            snapshot.data == null) {
+                        if (snapshot.hasError || snapshot.data == null) {
                           return Container(
                             height: 100,
                             alignment: Alignment.center,
@@ -223,9 +228,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               color: Colors.grey.shade100,
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Text(
-                              'Unable to load attached photo.',
-                            ),
+                            child: const Text('Unable to load attached photo.'),
                           );
                         }
 
@@ -240,7 +243,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               height: 120,
                               alignment: Alignment.center,
                               color: Colors.grey.shade100,
-                              child: const Text('Photo could not be displayed.'),
+                              child: const Text(
+                                'Photo could not be displayed.',
+                              ),
                             ),
                           ),
                         );
@@ -249,14 +254,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     const SizedBox(height: 22),
                   ],
 
-                  _DetailRow(
-                    label: 'Category',
-                    value: report.category,
-                  ),
-                  _DetailRow(
-                    label: 'Location',
-                    value: report.location,
-                  ),
+                  _DetailRow(label: 'Category', value: report.category),
+                  _DetailRow(label: 'Location', value: report.location),
                   _DetailRow(
                     label: 'Date submitted',
                     value: formatDate(report.createdAt),
@@ -266,18 +265,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                   const Text(
                     'Description',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     report.description,
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      height: 1.6,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade700, height: 1.6),
                   ),
 
                   const SizedBox(height: 22),
@@ -355,15 +348,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE8ECF3),
-                        ),
+                        borderSide: const BorderSide(color: Color(0xFFE8ECF3)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE8ECF3),
-                        ),
+                        borderSide: const BorderSide(color: Color(0xFFE8ECF3)),
                       ),
                     ),
                   ),
@@ -417,8 +406,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             onSelected: (_) {
                               setState(() => selectedStatus = status);
                             },
-                            selectedColor:
-                                primaryColor.withValues(alpha: 0.14),
+                            selectedColor: primaryColor.withValues(alpha: 0.14),
                           ),
                         );
                       }).toList(),
@@ -434,10 +422,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 children: [
                   const Text(
                     'All reports',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   Text(
@@ -452,188 +437,172 @@ class _ReportsScreenState extends State<ReportsScreen> {
               child: provider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : provider.errorMessage != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(25),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  size: 45,
-                                  color: Colors.redAccent,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  provider.errorMessage!,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(25),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 45,
+                              color: Colors.redAccent,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              provider.errorMessage!,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : visibleReports.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(30),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 55,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'No reports found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              provider.reports.isEmpty
+                                  ? 'Submitted reports will appear here.'
+                                  : 'Try changing your search or filters.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                      itemCount: visibleReports.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final report = visibleReports[index];
+                        final color = statusColor(report.status);
+
+                        return Card(
+                          elevation: 0,
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: Color(0xFFE8ECF3)),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => showReportDetails(report),
+                            child: Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 49,
+                                    height: 49,
+                                    decoration: BoxDecoration(
+                                      color: primaryColor.withValues(
+                                        alpha: 0.09,
+                                      ),
+                                      borderRadius: BorderRadius.circular(13),
+                                    ),
+                                    child: Icon(
+                                      categoryIcon(report.category),
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 13),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          report.title,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          report.location,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 9),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 5,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          children: [
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 9,
+                                                    vertical: 5,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: color.withValues(
+                                                  alpha: 0.12,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Text(
+                                                report.status,
+                                                style: TextStyle(
+                                                  color: color,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              formatDate(report.createdAt),
+                                              style: TextStyle(
+                                                color: Colors.grey.shade500,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        )
-                      : visibleReports.isEmpty
-                          ? Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(30),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.search_off,
-                                      size: 55,
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    const SizedBox(height: 14),
-                                    const Text(
-                                      'No reports found',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      provider.reports.isEmpty
-                                          ? 'Submitted reports will appear here.'
-                                          : 'Try changing your search or filters.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(
-                                20, 4, 20, 24,
-                              ),
-                              itemCount: visibleReports.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final report = visibleReports[index];
-                                final color = statusColor(report.status);
-
-                                return Card(
-                                  elevation: 0,
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    side: const BorderSide(
-                                      color: Color(0xFFE8ECF3),
-                                    ),
-                                  ),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(16),
-                                    onTap: () => showReportDetails(report),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(15),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 49,
-                                            height: 49,
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withValues(
-                                                alpha: 0.09,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(13),
-                                            ),
-                                            child: Icon(
-                                              categoryIcon(report.category),
-                                              color: primaryColor,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 13),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  report.title,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 15,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 5),
-                                                Text(
-                                                  report.location,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    color: Colors.grey.shade600,
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 9),
-                                                Wrap(
-                                                  spacing: 8,
-                                                  runSpacing: 5,
-                                                  crossAxisAlignment:
-                                                      WrapCrossAlignment.center,
-                                                  children: [
-                                                    Container(
-                                                      padding:
-                                                          const EdgeInsets
-                                                              .symmetric(
-                                                        horizontal: 9,
-                                                        vertical: 5,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: color.withValues(
-                                                          alpha: 0.12,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                      ),
-                                                      child: Text(
-                                                        report.status,
-                                                        style: TextStyle(
-                                                          color: color,
-                                                          fontSize: 11,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      formatDate(
-                                                        report.createdAt,
-                                                      ),
-                                                      style: TextStyle(
-                                                        color: Colors
-                                                            .grey.shade500,
-                                                        fontSize: 11,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 5),
-                                          const Icon(
-                                            Icons.chevron_right,
-                                            color: Colors.blueGrey,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -646,10 +615,7 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DetailRow({
-    required this.label,
-    required this.value,
-  });
+  const _DetailRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -660,10 +626,7 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 115,
-            child: Text(
-              label,
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
+            child: Text(label, style: TextStyle(color: Colors.grey.shade600)),
           ),
           Expanded(
             child: Text(

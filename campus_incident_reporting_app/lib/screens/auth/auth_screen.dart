@@ -184,9 +184,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ),
                               )
                             : Text(
-                                _isRegistering
-                                    ? 'Create Account'
-                                    : 'Sign In',
+                                _isRegistering ? 'Create Account' : 'Sign In',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

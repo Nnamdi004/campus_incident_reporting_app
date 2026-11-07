@@ -40,8 +40,7 @@ class CampusReport {
       studentId: data['studentId'] ?? '',
       studentEmail: data['studentEmail'] ?? '',
       photoPath: data['photoPath'],
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
-          DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 

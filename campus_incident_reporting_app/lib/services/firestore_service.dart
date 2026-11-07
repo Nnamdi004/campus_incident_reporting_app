@@ -64,9 +64,7 @@ class FirestoreService {
 
     if (report.status == newStatus) return;
 
-    await reportReference.update({
-      'status': newStatus,
-    });
+    await reportReference.update({'status': newStatus});
 
     final notification = AppNotification(
       id: '',
@@ -88,23 +86,19 @@ class FirestoreService {
         .where('recipientId', isEqualTo: studentId)
         .snapshots()
         .map((snapshot) {
-      final notifications = snapshot.docs
-          .map((doc) => AppNotification.fromFirestore(doc))
-          .toList();
+          final notifications = snapshot.docs
+              .map((doc) => AppNotification.fromFirestore(doc))
+              .toList();
 
-      notifications.sort(
-        (a, b) => b.createdAt.compareTo(a.createdAt),
-      );
+          notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      return notifications;
-    });
+          return notifications;
+        });
   }
 
   // Mark a notification as read.
   Future<void> markNotificationAsRead(String notificationId) async {
-    await _notificationsCollection.doc(notificationId).update({
-      'isRead': true,
-    });
+    await _notificationsCollection.doc(notificationId).update({'isRead': true});
   }
 
   // Mark all notifications as read.

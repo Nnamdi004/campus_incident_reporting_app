@@ -25,8 +25,9 @@ class NotificationProvider extends ChangeNotifier {
       _notifications.where((notification) => !notification.isRead).length;
 
   NotificationProvider() {
-    _authSubscription =
-        FirebaseAuth.instance.authStateChanges().listen(_handleAuthChange);
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen(
+      _handleAuthChange,
+    );
   }
 
   Future<void> _handleAuthChange(User? user) async {
@@ -45,20 +46,21 @@ class NotificationProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _notificationSubscription =
-        _firestoreService.getNotifications(user.uid).listen(
-      (notifications) {
-        _notifications = notifications;
-        _isLoading = false;
-        _errorMessage = null;
-        notifyListeners();
-      },
-      onError: (_) {
-        _isLoading = false;
-        _errorMessage = 'Unable to load notifications.';
-        notifyListeners();
-      },
-    );
+    _notificationSubscription = _firestoreService
+        .getNotifications(user.uid)
+        .listen(
+          (notifications) {
+            _notifications = notifications;
+            _isLoading = false;
+            _errorMessage = null;
+            notifyListeners();
+          },
+          onError: (_) {
+            _isLoading = false;
+            _errorMessage = 'Unable to load notifications.';
+            notifyListeners();
+          },
+        );
   }
 
   Future<void> markAsRead(String notificationId) async {

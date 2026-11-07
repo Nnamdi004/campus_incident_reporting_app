@@ -338,9 +338,31 @@ class DashboardScreen extends StatelessWidget {
                 ),
               )
             else if (provider.errorMessage != null)
-              _MessageCard(
-                icon: Icons.error_outline,
-                message: provider.errorMessage!,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 36,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(provider.errorMessage!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        context.read<ReportProvider>().retryLoadingReports();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try again'),
+                    ),
+                  ],
+                ),
               )
             else if (recentReports.isEmpty)
               const _MessageCard(

@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'screens/staff/staff_dashboard_screen.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
@@ -20,9 +22,7 @@ import 'providers/notification_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await Supabase.initialize(
     url: 'https://iinyrxsvbmehqmqwgpst.supabase.co',
@@ -39,15 +39,9 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ReportProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => NotificationProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ReportProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: const CampusReportApp(),
     ),
@@ -96,16 +90,11 @@ class CampusReportApp extends StatelessWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: Color(0xFFE6EAF2),
-            ),
+            borderSide: const BorderSide(color: Color(0xFFE6EAF2)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: Color(0xFF2457C5),
-              width: 1.5,
-            ),
+            borderSide: const BorderSide(color: Color(0xFF2457C5), width: 1.5),
           ),
         ),
       ),
@@ -123,9 +112,7 @@ class AuthGate extends StatelessWidget {
       builder: (context, auth, child) {
         if (auth.isInitializing) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -147,9 +134,7 @@ class AuthGate extends StatelessWidget {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                body: Center(child: CircularProgressIndicator()),
               );
             }
 
@@ -202,10 +187,7 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   late final List<Widget> pages = [
-    DashboardScreen(
-      onReportTap: openReportForm,
-      onViewAllTap: openReports,
-    ),
+    DashboardScreen(onReportTap: openReportForm, onViewAllTap: openReports),
     const ReportsScreen(),
     const ReportFormScreen(),
     const ProfileScreen(),
@@ -214,10 +196,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: selectedIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: selectedIndex, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {

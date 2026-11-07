@@ -10,8 +10,7 @@ class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
 
   @override
-  State<StaffDashboardScreen> createState() =>
-      _StaffDashboardScreenState();
+  State<StaffDashboardScreen> createState() => _StaffDashboardScreenState();
 }
 
 class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
@@ -20,8 +19,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
   String _selectedFilter = 'All';
   String _searchQuery = '';
 
-  final TextEditingController _searchController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   final List<String> _statuses = [
     'Submitted',
@@ -86,14 +84,11 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     await context.read<AuthProvider>().logout();
   }
 
-  Future<void> _changeStatus(
-    CampusReport report,
-    String newStatus,
-  ) async {
+  Future<void> _changeStatus(CampusReport report, String newStatus) async {
     if (newStatus == report.status) return;
 
     try {
-      await context.read<ReportProvider>().updateReportStatus(
+      final success = await context.read<ReportProvider>().updateReportStatus(
         reportId: report.id,
         newStatus: newStatus,
       );
@@ -102,8 +97,12 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Report updated to $newStatus.'),
-          backgroundColor: Colors.green,
+          content: Text(
+            success
+                ? 'Report status updated to $newStatus.'
+                : 'Could not update report status. Please try again.',
+          ),
+          backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
     } catch (_) {
@@ -111,7 +110,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not update report status.'),
+          content: Text('Could not update report status. Please try again.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -124,8 +123,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       MaterialPageRoute(
         builder: (_) => StaffReportDetailsScreen(
           report: report,
-          onStatusChanged: (status) =>
-              _changeStatus(report, status),
+          onStatusChanged: (status) => _changeStatus(report, status),
         ),
       ),
     );
@@ -142,22 +140,19 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     final provider = context.watch<ReportProvider>();
     final reports = provider.reports;
 
-    final submitted =
-        reports.where((r) => r.status == 'Submitted').length;
-    final inProgress =
-        reports.where((r) => r.status == 'In Progress').length;
-    final resolved =
-        reports.where((r) => r.status == 'Resolved').length;
-    final rejected =
-        reports.where((r) => r.status == 'Rejected').length;
+    final submitted = reports.where((r) => r.status == 'Submitted').length;
+    final inProgress = reports.where((r) => r.status == 'In Progress').length;
+    final resolved = reports.where((r) => r.status == 'Resolved').length;
+    final rejected = reports.where((r) => r.status == 'Rejected').length;
 
     final filteredReports = reports.where((report) {
-      final matchesFilter = _selectedFilter == 'All' ||
-          report.status == _selectedFilter;
+      final matchesFilter =
+          _selectedFilter == 'All' || report.status == _selectedFilter;
 
       final query = _searchQuery.toLowerCase();
 
-      final matchesSearch = report.title.toLowerCase().contains(query) ||
+      final matchesSearch =
+          report.title.toLowerCase().contains(query) ||
           report.studentEmail.toLowerCase().contains(query) ||
           report.location.toLowerCase().contains(query) ||
           report.category.toLowerCase().contains(query);
@@ -190,205 +185,185 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.errorMessage != null
-              ? Center(child: Text(provider.errorMessage!))
-              : RefreshIndicator(
-                  onRefresh: () async {
-                    await Future.delayed(
-                      const Duration(milliseconds: 300),
-                    );
-                  },
-                  child: ListView(
-                    padding: const EdgeInsets.all(20),
+          ? Center(child: Text(provider.errorMessage!))
+          : RefreshIndicator(
+              onRefresh: () async {
+                await Future.delayed(const Duration(milliseconds: 300));
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const Text(
+                    'Staff Dashboard',
+                    style: TextStyle(
+                      fontSize: 27,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF17243A),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Monitor campus incidents and manage reports.',
+                    style: TextStyle(color: Colors.blueGrey),
+                  ),
+                  const SizedBox(height: 24),
+
+                  GridView.count(
+                    crossAxisCount: MediaQuery.of(context).size.width > 650
+                        ? 4
+                        : 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.15,
                     children: [
-                      const Text(
-                        'Staff Dashboard',
-                        style: TextStyle(
-                          fontSize: 27,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF17243A),
-                        ),
+                      _SummaryCard(
+                        title: 'Total Reports',
+                        count: reports.length,
+                        color: primary,
+                        icon: Icons.assignment_outlined,
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Monitor campus incidents and manage reports.',
-                        style: TextStyle(color: Colors.blueGrey),
+                      _SummaryCard(
+                        title: 'Submitted',
+                        count: submitted,
+                        color: Colors.blue,
+                        icon: Icons.inbox_outlined,
                       ),
-                      const SizedBox(height: 24),
-
-                      GridView.count(
-                        crossAxisCount:
-                            MediaQuery.of(context).size.width > 650
-                                ? 4
-                                : 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 1.55,
-                        children: [
-                          _SummaryCard(
-                            title: 'Total Reports',
-                            count: reports.length,
-                            color: primary,
-                            icon: Icons.assignment_outlined,
-                          ),
-                          _SummaryCard(
-                            title: 'Submitted',
-                            count: submitted,
-                            color: Colors.blue,
-                            icon: Icons.inbox_outlined,
-                          ),
-                          _SummaryCard(
-                            title: 'In Progress',
-                            count: inProgress,
-                            color: Colors.orange,
-                            icon: Icons.pending_actions,
-                          ),
-                          _SummaryCard(
-                            title: 'Resolved',
-                            count: resolved,
-                            color: Colors.green,
-                            icon: Icons.check_circle_outline,
-                          ),
-                        ],
+                      _SummaryCard(
+                        title: 'In Progress',
+                        count: inProgress,
+                        color: Colors.orange,
+                        icon: Icons.pending_actions,
                       ),
-
-                      const SizedBox(height: 26),
-
-                      const Text(
-                        'Manage Reports',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      _SummaryCard(
+                        title: 'Resolved',
+                        count: resolved,
+                        color: Colors.green,
+                        icon: Icons.check_circle_outline,
                       ),
-                      const SizedBox(height: 14),
-
-                      TextField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          setState(() => _searchQuery = value);
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search reports, students or locations',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() => _searchQuery = '');
-                                  },
-                                  icon: const Icon(Icons.close),
-                                )
-                              : null,
-                        ),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            'All',
-                            ..._statuses,
-                          ].map((status) {
-                            final selected =
-                                _selectedFilter == status;
-
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: ChoiceChip(
-                                label: Text(status),
-                                selected: selected,
-                                onSelected: (_) {
-                                  setState(() {
-                                    _selectedFilter = status;
-                                  });
-                                },
-                                selectedColor:
-                                    primary.withValues(alpha: 0.12),
-                                labelStyle: TextStyle(
-                                  color: selected ? primary : Colors.black87,
-                                  fontWeight: selected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${filteredReports.length} reports found',
-                            style: const TextStyle(
-                              color: Colors.blueGrey,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            '$rejected rejected',
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      if (filteredReports.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(35),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Column(
-                            children: [
-                              Icon(
-                                Icons.inbox_outlined,
-                                size: 50,
-                                color: Colors.blueGrey,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'No reports found.',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: 5),
-                              Text(
-                                'Try another search or filter.',
-                                style: TextStyle(
-                                  color: Colors.blueGrey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        ...filteredReports.map(
-                          (report) => _StaffReportCard(
-                            report: report,
-                            categoryIcon:
-                                _categoryIcon(report.category),
-                            statusColor:
-                                _statusColor(report.status),
-                            onTap: () => _openDetails(report),
-                          ),
-                        ),
                     ],
                   ),
-                ),
+
+                  const SizedBox(height: 26),
+
+                  const Text(
+                    'Manage Reports',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 14),
+
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() => _searchQuery = value);
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search reports, students or locations',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                              icon: const Icon(Icons.close),
+                            )
+                          : null,
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: ['All', ..._statuses].map((status) {
+                        final selected = _selectedFilter == status;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(status),
+                            selected: selected,
+                            onSelected: (_) {
+                              setState(() {
+                                _selectedFilter = status;
+                              });
+                            },
+                            selectedColor: primary.withValues(alpha: 0.12),
+                            labelStyle: TextStyle(
+                              color: selected ? primary : Colors.black87,
+                              fontWeight: selected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${filteredReports.length} reports found',
+                        style: const TextStyle(
+                          color: Colors.blueGrey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '$rejected rejected',
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  if (filteredReports.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(35),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.inbox_outlined,
+                            size: 50,
+                            color: Colors.blueGrey,
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'No reports found.',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Try another search or filter.',
+                            style: TextStyle(color: Colors.blueGrey),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...filteredReports.map(
+                      (report) => _StaffReportCard(
+                        report: report,
+                        categoryIcon: _categoryIcon(report.category),
+                        statusColor: _statusColor(report.status),
+                        onTap: () => _openDetails(report),
+                      ),
+                    ),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -423,17 +398,11 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             '$count',
-            style: const TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
           ),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.blueGrey,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Colors.blueGrey, fontSize: 12),
           ),
         ],
       ),
@@ -469,12 +438,9 @@ class _StaffReportCard extends StatelessWidget {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor:
-                        const Color(0xFF2457C5).withValues(alpha: 0.10),
-                    child: Icon(
-                      categoryIcon,
-                      color: const Color(0xFF2457C5),
-                    ),
+                    backgroundColor: const Color(0xFF2457C5)
+                        .withValues(alpha: 0.10),
+                    child: Icon(categoryIcon, color: const Color(0xFF2457C5)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -513,10 +479,7 @@ class _StaffReportCard extends StatelessWidget {
                 report.description,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.blueGrey,
-                  height: 1.4,
-                ),
+                style: const TextStyle(color: Colors.blueGrey, height: 1.4),
               ),
 
               const SizedBox(height: 12),

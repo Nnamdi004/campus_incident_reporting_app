@@ -34,8 +34,7 @@ class AppNotification {
       message: data['message'] ?? '',
       status: data['status'] ?? '',
       isRead: data['isRead'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
-          DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
