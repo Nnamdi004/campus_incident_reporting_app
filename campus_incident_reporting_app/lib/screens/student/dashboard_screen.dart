@@ -4,16 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../models/campus_report.dart';
 import '../../providers/report_provider.dart';
+import '../../providers/notification_provider.dart';
+import 'notifications_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback? onReportTap;
   final VoidCallback? onViewAllTap;
 
-  const DashboardScreen({
-    super.key,
-    this.onReportTap,
-    this.onViewAllTap,
-  });
+  const DashboardScreen({super.key, this.onReportTap, this.onViewAllTap});
 
   static const Color primaryColor = Color(0xFF2457C5);
   static const Color darkColor = Color(0xFF17243A);
@@ -44,8 +42,18 @@ class DashboardScreen extends StatelessWidget {
 
   String formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -85,21 +93,21 @@ class DashboardScreen extends StatelessWidget {
     final provider = context.watch<ReportProvider>();
     final reports = provider.reports;
 
-    final submitted = reports.where(
-      (r) => r.status.toLowerCase() == 'submitted',
-    ).length;
+    final submitted = reports
+        .where((r) => r.status.toLowerCase() == 'submitted')
+        .length;
 
-    final inProgress = reports.where(
-      (r) => r.status.toLowerCase() == 'in progress',
-    ).length;
+    final inProgress = reports
+        .where((r) => r.status.toLowerCase() == 'in progress')
+        .length;
 
-    final resolved = reports.where(
-      (r) => r.status.toLowerCase() == 'resolved',
-    ).length;
+    final resolved = reports
+        .where((r) => r.status.toLowerCase() == 'resolved')
+        .length;
 
-    final rejected = reports.where(
-      (r) => r.status.toLowerCase() == 'rejected',
-    ).length;
+    final rejected = reports
+        .where((r) => r.status.toLowerCase() == 'rejected')
+        .length;
 
     final recentReports = reports.take(3).toList();
 
@@ -113,32 +121,62 @@ class DashboardScreen extends StatelessWidget {
             SizedBox(width: 9),
             Text(
               'Campus Report',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: darkColor,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, color: darkColor),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Notifications',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const _ComingSoonScreen(
-                    title: 'Notifications',
-                    message: 'Your campus report notifications will appear here.',
-                    icon: Icons.notifications_none,
-                  ),
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, child) {
+              final unreadCount = notificationProvider.unreadCount;
+
+              return IconButton(
+                tooltip: 'Notifications',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  );
+                },
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.notifications_none,
+                      color: darkColor,
+                      size: 27,
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: -5,
+                        top: -5,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(
+                            minWidth: 17,
+                            minHeight: 17,
+                          ),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               );
             },
-            icon: const Icon(
-              Icons.notifications_none,
-              color: darkColor,
-            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -161,10 +199,7 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 6),
             const Text(
               'Help make your campus a better place.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.blueGrey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.blueGrey),
             ),
             const SizedBox(height: 23),
 
@@ -173,10 +208,7 @@ class DashboardScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF2457C5),
-                    Color(0xFF4386E8),
-                  ],
+                  colors: [Color(0xFF2457C5), Color(0xFF4386E8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -209,10 +241,7 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 7),
                   const Text(
                     'Report it and help us create a safer, better campus for everyone.',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      height: 1.5,
-                    ),
+                    style: TextStyle(color: Colors.white70, height: 1.5),
                   ),
                   const SizedBox(height: 17),
                   SizedBox(
@@ -358,10 +387,7 @@ class _SectionHeading extends StatelessWidget {
             color: DashboardScreen.darkColor,
           ),
         ),
-        TextButton(
-          onPressed: onTap,
-          child: Text(action),
-        ),
+        TextButton(onPressed: onTap, child: Text(action)),
       ],
     );
   }
@@ -412,10 +438,7 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.blueGrey,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
           ),
         ],
       ),
@@ -446,10 +469,7 @@ class _RecentReportCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE8ECF3)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 7,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         leading: Container(
           width: 45,
           height: 45,
@@ -457,10 +477,7 @@ class _RecentReportCard extends StatelessWidget {
             color: DashboardScreen.primaryColor.withValues(alpha: 0.09),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: DashboardScreen.primaryColor,
-          ),
+          child: Icon(icon, color: DashboardScreen.primaryColor),
         ),
         title: Text(
           report.title,
@@ -512,10 +529,7 @@ class _RecentReportCard extends StatelessWidget {
             ],
           ),
         ),
-        trailing: const Icon(
-          Icons.chevron_right,
-          color: Colors.blueGrey,
-        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.blueGrey),
       ),
     );
   }
@@ -525,10 +539,7 @@ class _MessageCard extends StatelessWidget {
   final IconData icon;
   final String message;
 
-  const _MessageCard({
-    required this.icon,
-    required this.message,
-  });
+  const _MessageCard({required this.icon, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -549,42 +560,6 @@ class _MessageCard extends StatelessWidget {
             style: const TextStyle(color: Colors.blueGrey),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ComingSoonScreen extends StatelessWidget {
-  final String title;
-  final String message;
-  final IconData icon;
-
-  const _ComingSoonScreen({
-    required this.title,
-    required this.message,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 55, color: DashboardScreen.primaryColor),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.blueGrey),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

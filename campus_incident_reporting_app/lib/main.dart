@@ -12,6 +12,7 @@ import 'screens/student/reports_screen.dart';
 import 'screens/student/report_form_screen.dart';
 import 'screens/student/profile_screen.dart';
 import 'providers/report_provider.dart';
+import 'providers/notification_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,11 @@ Future<void> main() async {
     url: 'https://iinyrxsvbmehqmqwgpst.supabase.co',
     publishableKey: 'sb_publishable_fWWfKMg8MlpObIn8uKShpQ_3DyEkVuo',
     accessToken: () async {
-      return await FirebaseAuth.instance.currentUser?.getIdToken();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return '';
+      }
+      return user.getIdToken();
     },
   );
 
@@ -37,12 +42,14 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (_) => ReportProvider(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(),
+        ),
       ],
       child: const CampusReportApp(),
     ),
   );
 }
-
 
 class CampusReportApp extends StatelessWidget {
   const CampusReportApp({super.key});
