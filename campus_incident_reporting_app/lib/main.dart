@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'screens/staff/staff_dashboard_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
@@ -56,18 +59,54 @@ class CampusReportApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF2457C5),
+      brightness: Brightness.light,
+    );
+
     return MaterialApp(
       title: 'Campus Report',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2457C5),
+        colorScheme: colorScheme,
+        scaffoldBackgroundColor: const Color(0xFFF5F7FC),
+        textTheme: ThemeData.light().textTheme.apply(
+          fontFamily: GoogleFonts.inter().fontFamily,
         ),
-        scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF17243A),
           elevation: 0,
+          centerTitle: false,
+        ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF5F7FC),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: Color(0xFFE6EAF2),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: Color(0xFF2457C5),
+              width: 1.5,
+            ),
+          ),
         ),
       ),
       home: const AuthGate(),
@@ -90,11 +129,55 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        if (auth.isAuthenticated) {
-          return const MainNavigation();
+        if (!auth.isAuthenticated) {
+          return const AuthScreen();
         }
 
-        return const AuthScreen();
+        final user = FirebaseAuth.instance.currentUser;
+
+        if (user == null) {
+          return const AuthScreen();
+        }
+
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Scaffold(
+                body: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Unable to verify your account role. '
+                      'Please check your connection and try again.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final userData = snapshot.data?.data();
+            final role = userData?['role']?.toString().toLowerCase();
+
+            if (role == 'staff') {
+              return const StaffDashboardScreen();
+            }
+
+            return const MainNavigation();
+          },
+        );
       },
     );
   }

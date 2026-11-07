@@ -42,6 +42,10 @@ dependencies:
   firebase_storage: ^14.0.1
   provider: ^6.1.5+1
   supabase_flutter: ^2.18.3
+  flex_color_scheme: ^9.0.0
+  google_fonts: ^9.0.0
+  flutter_animate: ^4.5.2
+  iconsax: ^0.0.8
 
 dev_dependencies:
   flutter_test:
